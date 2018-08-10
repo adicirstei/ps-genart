@@ -1,0 +1,14 @@
+{
+  "name": "ps-genart",
+  "set": "psc-0.12.0",
+  "source": "https://github.com/purescript/package-sets.git",
+  "depends": [
+    "canvas",
+    "psci-support",
+    "console",
+    "effect",
+    "prelude",
+    "integers",
+    "colors"
+  ]
+}
