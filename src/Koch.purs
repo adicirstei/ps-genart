@@ -5,8 +5,10 @@ import Graphics.Canvas
 import Prelude
 import Simulation
 
+import Data.Int (toNumber)
 import Effect (Effect)
 import Math (cos, max, pi, sin)
+import Data.Array((:))
 
 
 type Point = 
@@ -22,6 +24,26 @@ type Line =
 
 type Path = Array Point
 
+spiral :: Number -> Number -> Int -> Line -> Path
+spiral angle scaleFactor n line
+  = spiral' n line
+  where
+    spiral' n line@{start:p1, end:p2}
+      | n <= 0    = []
+      | otherwise = (p1 : spiral' (n - 1) newLine)
+      where
+        newLine = connectLine line (scaleLine scaleFactor (rotateLine angle line))
+
+polygon :: Int -> Line -> Path
+polygon n line 
+  | n > 2 = spiral rotationAngle 1.0 (n + 1) line
+              where 
+                rotationAngle = (2.0 * pi) / (toNumber n)
+  | otherwise = []
+  
+
+
+
 kochLine :: Int -> Point -> Point -> Path
 kochLine n pS pE 
   | n <= 0 = []
@@ -36,8 +58,11 @@ kochLine n pS pE
     {start:_, end:p2} = rotateLine (5.0 / 3.0 * pi) l2
 
 
-
-
+kochFlake :: Int -> Line -> Path
+kochFlake n line = 
+  kochLine n p1 p2 <> kochLine n p2 p3 <> kochLine n p3 p1 
+  where
+    [p1, p2, p3, _] = polygon 3 line
 
 
 type Model = 
