@@ -5,10 +5,12 @@ import Graphics.Canvas
 import Prelude
 import Simulation
 
+import Data.Array ((:))
+import Data.Foldable (for_)
 import Data.Int (toNumber)
+import Data.List (List(..), fromFoldable)
 import Effect (Effect)
 import Math (cos, max, pi, sin)
-import Data.Array((:))
 
 
 type Point = 
@@ -60,21 +62,22 @@ kochLine n pS pE
 
 kochFlake :: Int -> Line -> Path
 kochFlake n line = 
-  kochLine n p1 p2 <> kochLine n p2 p3 <> kochLine n p3 p1 
-  where
-    [p1, p2, p3, _] = polygon 3 line
-
-
+  let p = polygon 3 line
+  in 
+    case p of 
+      [p1, p2, p3, _] -> kochLine n p1 p2 <> kochLine n p2 p3 <> kochLine n p3 p1 
+      _ -> []
+ 
 type Model = 
   { line :: Line
-  , angle :: Number
+  , step :: Int
   , color :: Color
   }
 
 startLine :: Line
 startLine =
-  { start : {x:400.0, y: 300.0}
-  , end : {x: 420.0, y: 320.0}
+  { start : {x:30.0, y: 30.0}
+  , end : {x: 600.0, y: 100.0}
   }
 
 
@@ -93,15 +96,13 @@ toBlue c =
 initialModel :: Model
 initialModel = 
   { line: startLine
-  , angle : pi /6.0 + 0.1
+  , step : 0
   , color: hsl 0.0 1.0 0.5
   }
 
 stepModel :: Model -> Model
 stepModel m = 
-  m { color = toBlue m.color 
-    , line = connectLine m.line (scaleLine 1.01 (rotateLine m.angle m.line) )
-    }
+  m { step = if m.step < 7 then m.step + 1 else 0 }
 
 connectLine :: Line -> Line -> Line
 connectLine {start:_, end: pE} l2 = startLineFrom pE l2
@@ -135,11 +136,19 @@ scaleLine factor {start:p, end:q} =
 
 renderModel :: Context2D -> Model -> Effect Unit
 renderModel ctx m = do
+  let p = fromFoldable $ kochFlake m.step m.line
+  clearRect ctx {x:0.0, y:0.0, width:800.0, height:600.0}
   setStrokeStyle ctx (cssStringHSLA  m.color)
-  strokePath ctx 
-    do 
-      moveTo ctx (m.line.start.x) (m.line.start.y)
-      lineTo ctx (m.line.end.x) (m.line.end.y)
+  case p of
+    Cons s rest -> 
+      strokePath ctx 
+        do 
+          moveTo ctx (s.x) (s.y)
+          for_ rest (\p -> lineTo ctx (p.x) (p.y))
+          
+    _ -> pure unit
+    
+  
  
 
 sim :: Simulation Model

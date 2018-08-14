@@ -10,7 +10,7 @@ import Effect (Effect)
 import Effect.Console (log)
 
 import Simulation(simulate)
-import Lines(sim) as L
+import Koch(sim) as S
 
 
 
@@ -18,7 +18,7 @@ main :: Effect Unit
 main = do
   mc <- getCanvasElementById "genart"
   case mc of 
-    Just c -> simulate c L.sim
+    Just c -> simulate c S.sim
     Nothing -> log "canvas element not found"
 
 
